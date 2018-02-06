@@ -9,3 +9,7 @@ canvas {
   display: block;
   border: solid 2px black;
 }
+
+p {
+  text-align: center;
+}
