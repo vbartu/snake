@@ -2,120 +2,115 @@ var canvas = document.getElementById('canvas');
 var ctx = canvas.getContext('2d');
 ctx.scale(20, 20);
 
-var moveDir = 'down'
-var x = 3, y = 10; // head position
-var l = 6; // snake length
-var tx = x, ty = y - l; //tail position
-var tailMov = ['down', 'down', 'down', 'down', 'down', 'down'];
+let snake_positions = [{x: 2, y: 4}, {x: 2, y: 3}];
+let snake_head = {x: 2, y: 5};
+let fruit = {x: 0, y: 0};
 
-var canvasWidth = canvas.width / 20;
-var canvasHeight = canvas.height / 20;
+let direction = 'down';
+let state = 'pause' // play, pause, lose
 
-ctx.fillStyle = '#FF0000';
-for (var i = y; i >= ty; i--) {
-  ctx.fillRect(x, i, 1, 1);
+var play = () => {
+  ctx.clearRect(0, 0, 25, 25);
+
+  ctx.fillStyle = '#42f471' //green
+  ctx.fillRect(fruit.x, fruit.y, 1, 1);
+
+  ctx.fillStyle = '#f46e42'; // orange
+  for (var i = 0; i < snake_positions.length; i++) {
+    ctx.fillRect(snake_positions[i].x, snake_positions[i].y, 1, 1);
+  }
+  ctx.fillStyle = '#f44242'; // red
+  ctx.fillRect(snake_head.x, snake_head.y, 1, 1);
+
+  check();
+
+  if (state === 'play') {
+    move();
+
+    if (snake_head.x === fruit.x && snake_head.y === fruit.y) {
+      random_fruit();
+    } else {
+      snake_positions.pop();
+    }
+  }
+
+
 }
-
 
 document.addEventListener('keydown', function(event) {
-  if (event.keyCode == 37) {if (moveDir != 'right') moveDir = 'left';}
-  else if (event.keyCode == 38) {if (moveDir != 'down') moveDir = 'up';}
-  else if (event.keyCode == 39) {if (moveDir != 'left') moveDir = 'right';}
-  else if (event.keyCode == 40) {if (moveDir != 'up') moveDir = 'down';}
+  if (event.keyCode == 37) {if (direction != 'right') direction = 'left';}
+  else if (event.keyCode == 38) {if (direction !== 'down') direction = 'up';}
+  else if (event.keyCode == 39) {if (direction !== 'left') direction = 'right';}
+  else if (event.keyCode == 40) {if (direction !== 'up') direction = 'down';}
+  else if (event.keyCode == 80) {
+    if (state === 'play')
+      state = 'pause';
+    else if (state === 'pause')
+      state = 'play';
+  }
 });
 
-function move() {
-  switch (moveDir) {
-    case 'up':
-      moveUp();
-      break;
+let check = () => {
+  for (var i = 0; i < snake_positions.length; i++) {
+    if (snake_head.x === snake_positions[i].x && snake_head.y === snake_positions[i].y) {
+      state = 'lose';
 
-    case 'down':
-      moveDown();
-      break;
-
-    case "left":
-      moveLeft();
-      break;
-
-    case "right":
-      moveRight();
-      break;
+    }
   }
 }
 
-function moveLeft() {
-  clearTail();
+let move = () => {
+  snake_positions.unshift({x: snake_head.x, y: snake_head.y});
 
-  x--;
-  if (x < 0)
-    x = canvasWidth + x;
+  switch (direction) {
+    case 'down':
+      snake_head.y++;
+      if (snake_head.y >= 25)
+        snake_head.y -= 25;
+      break;
 
-  ctx.fillRect(x, y, 1, 1);
-}
+    case 'up':
+      snake_head.y--;
+      if (snake_head.y < 0)
+        snake_head.y += 25;
+      break;
 
-function moveUp() {
-  clearTail();
-
-  y--;
-  if (y < 0)
-    y = canvasHeight + y;
-
-  ctx.fillRect(x, y, 1, 1);
-}
-
-function moveRight() {
-  clearTail();
-
-  x++;
-  if (x >= canvasWidth)
-    x = x - canvasWidth;
-
-  ctx.fillRect(x, y, 1, 1);
-}
-
-function moveDown() {
-  clearTail();
-
-  y++;
-  if (y >= canvasHeight)
-    y = y - canvasHeight;
-
-  ctx.fillRect(x, y, 1, 1);
-}
-
-function clearTail() {
-  ctx.clearRect(tx, ty, 1, 1);
-
-  var tm = tailMov[0];
-  switch (tm) {
     case 'left':
-      tx--;
-      if (tx < 0)
-        tx = canvasWidth + tx;
+      snake_head.x--;
+      if (snake_head.x < 0)
+        snake_head.x += 25;
       break;
-    case 'up':
-      ty--;
-      if (ty < 0)
-        ty = canvasHeight + ty;
-      break;
+
     case 'right':
-      tx++;
-      if (tx >= canvasWidth)
-        tx = tx - canvasWidth;
+      snake_head.x++;
+      if (snake_head.x >= 25)
+        snake_head.x -= 25;
       break;
-    case 'down':
-      ty++;
-      if (ty >= canvasHeight)
-        ty = ty - canvasHeight;
-      break;
-
   }
-
-  for (var i = 1; i < tailMov.length; i++) {
-    tailMov[i-1] = tailMov[i];
-  }
-  tailMov[tailMov.length-1] = moveDir;
 }
 
-var t = setInterval(move, 100);
+let random_fruit = () => {
+  let valid = true;
+  x = Math.floor(Math.random()*25);
+  y = Math.floor(Math.random()*25);
+
+  if (snake_head.x === x && snake_head.y === y)
+    valid =  false;
+
+  for (var i = 0; i < snake_positions.length; i++) {
+    if(snake_positions[i].x === x && snake_positions[i].y === y)
+      valid = false;
+  }
+
+  if (valid) {
+    fruit.x = x;
+    fruit.y = y;
+  } else {
+    random_fruit();
+  }
+
+}
+
+
+random_fruit();
+var t = setInterval(play, 200);
